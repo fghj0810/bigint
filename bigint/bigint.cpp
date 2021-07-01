@@ -4,6 +4,22 @@
 #include "bigint.h"
 
 namespace bigint {
+	static inline void __mul(uint32_t* retValue, const uint32_t* left, const uint32_t* right, int length)
+	{
+		uint64_t overflow = 0;
+		for (int i = length-1; i >= 0; i--)
+		{
+			retValue[i] = overflow;
+			overflow >>= 32;
+			for (int j = 0; j < length - i; j++)
+			{
+				uint64_t tmp = static_cast<uint64_t>(left[length - 1 - j]) * right[i + j] + retValue[i];
+				retValue[i] = tmp;
+				overflow += (tmp >> 32);
+			}
+		}
+	}
+
 	UBigInt2048::UBigInt2048()
 	{
 		std::memset(b, 0, sizeof(b));
@@ -55,6 +71,15 @@ namespace bigint {
 		}
 	}
 
+	UBigInt2048 UBigInt2048::operator+(const UBigInt2048& other) const
+	{
+		return UBigInt2048();
+	}
+
+	UBigInt2048 UBigInt2048::operator-(const UBigInt2048& other) const
+	{
+		return UBigInt2048();
+	}
 
 	UBigInt2048 UBigInt2048::operator*(const uint32_t& other) const
 	{
@@ -72,18 +97,7 @@ namespace bigint {
 	UBigInt2048 UBigInt2048::operator*(const UBigInt2048& other) const
 	{
 		UBigInt2048 retValue;
-		uint64_t overflow = 0;
-		for (int i = 63; i >= 0; i--)
-		{
-			retValue.b[i] = overflow;
-			overflow >>= 32;
-			for (int j = 0; j < 64 - i; j++)
-			{
-				uint64_t tmp = static_cast<uint64_t>(this->b[63 - j]) * other.b[i + j] + retValue.b[i];
-				retValue.b[i] = tmp;
-				overflow += (tmp >> 32);
-			}
-		}
+		__mul(retValue.b, b, other.b, 64);
 		return retValue;
 	}
 }
