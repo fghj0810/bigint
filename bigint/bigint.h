@@ -12,10 +12,15 @@ namespace bigint {
 		void getBytes256(uint8_t* buf) const;
 
 	public:
+		UBigInt2048 operator>>(const int& num) const;
+		UBigInt2048& operator>>=(const int& num);
+		UBigInt2048 operator<<(const int& num) const;
+		UBigInt2048& operator<<=(const int& num);
 		UBigInt2048 operator+(const UBigInt2048& other) const;
 		UBigInt2048 operator-(const UBigInt2048& other) const;
 		UBigInt2048 operator*(const uint32_t& other) const;
 		UBigInt2048 operator*(const UBigInt2048& other) const;
+		UBigInt2048 operator/(const UBigInt2048& other) const;
 
 	private:
 		uint32_t b[64];
