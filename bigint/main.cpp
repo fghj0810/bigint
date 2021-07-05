@@ -74,6 +74,7 @@ int main()
 	std::cout << sizeof(bigint::BigInt<2048>) << std::endl;
 	bigint::BigInt<1024> t1(a);
 	bigint::BigInt<4096> t2(a);
+	UBigInt2048_print(a);
 	//uint32_t u = 0x12345678;
 	//std::cout << std::hex << (u << -8) << std::endl;
 	return 0;

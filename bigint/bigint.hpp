@@ -53,6 +53,8 @@ namespace bigint {
 		BigInt& operator%=(const uint32_t& other);
 		BigInt operator%(const BigInt& other) const;
 		BigInt& operator%=(const BigInt& other);
+		BigInt& operator++();
+		BigInt& operator--();
 
 	private:
 		uint32_t b[getElementCount()] = { 0 };
@@ -585,6 +587,18 @@ namespace bigint {
 	inline BigInt<SIZE>& BigInt<SIZE>::operator%=(const BigInt<SIZE>& other)
 	{
 		*this = *this % other;
+		return *this;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE>& BigInt<SIZE>::operator++()
+	{
+		*this += 1;
+		return *this;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE>& BigInt<SIZE>::operator--()
+	{
+		*this -= 1;
 		return *this;
 	}
 }
