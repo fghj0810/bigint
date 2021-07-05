@@ -22,10 +22,12 @@ namespace bigint {
 		BigInt(const uint32_t& value);
 		BigInt(uint8_t* buf, size_t num);
 		void getBytes(uint8_t* buf) const;
+		static bool div(const BigInt& a, const uint32_t& b, BigInt& q, BigInt& r) noexcept;
+		static bool div(const BigInt& a, const BigInt& b, BigInt& q, BigInt& r) noexcept;
 
 	public:
-		std::weak_ordering operator<=>(const uint32_t& other) const;
-		std::weak_ordering operator<=>(const BigInt& other) const;
+		std::strong_ordering operator<=>(const uint32_t& other) const noexcept;
+		std::strong_ordering operator<=>(const BigInt& other) const noexcept;
 		BigInt operator>>(const uint16_t& shiftnum) const;
 		BigInt& operator>>=(const uint16_t& shiftnum);
 		BigInt operator<<(const uint16_t& shiftnum) const;
@@ -42,8 +44,14 @@ namespace bigint {
 		BigInt& operator*=(const uint32_t& other);
 		BigInt operator*(const BigInt& other) const;
 		BigInt& operator*=(const BigInt& other);
+		BigInt operator/(const uint32_t& other) const;
+		BigInt& operator/=(const uint32_t& other);
 		BigInt operator/(const BigInt& other) const;
 		BigInt& operator/=(const BigInt& other);
+		BigInt operator%(const uint32_t& other) const;
+		BigInt& operator%=(const uint32_t& other);
+		BigInt operator%(const BigInt& other) const;
+		BigInt& operator%=(const BigInt& other);
 
 	private:
 		uint32_t b[getElementLength()] = { 0 };
@@ -132,30 +140,134 @@ namespace bigint {
 		}
 	}
 	template<size_t SIZE>
-	inline std::weak_ordering BigInt<SIZE>::operator<=>(const uint32_t& other) const
+	inline bool BigInt<SIZE>::div(const BigInt& a, const uint32_t& b, BigInt& q, BigInt& r) noexcept
+	{
+		q = BigInt<SIZE>();
+		r = BigInt<SIZE>();
+		if (b <= 1)
+		{
+			if (b == 0)
+			{
+				return false;
+			}
+			else
+			{
+				q = a;
+			}
+		}
+		else
+		{
+			auto cmp = a <=> b;
+			if (cmp == 0)
+			{
+				q.b[getElementLength() - 1] = 0x01;
+			}
+			else if (cmp > 0)
+			{
+				const size_t bitsNumPerEle = 8 * sizeof(uint32_t);
+				r.b[getElementLength() - 1] |= a.b[0] >> (bitsNumPerEle - 1);
+				if (r >= b)
+				{
+					r -= b;
+					q.b[getElementLength() - 1] = 0x01;
+				}
+				for (size_t i = 1; i < SIZE; i++)
+				{
+					size_t bIndex = i / bitsNumPerEle;
+					size_t bitIndex = i % bitsNumPerEle;
+					uint32_t mask = static_cast<uint32_t>(1) << ((bitsNumPerEle - 1) - bitIndex);
+					r <<= 1;
+					q <<= 1;
+					r.b[getElementLength() - 1] |= (a.b[bIndex] & mask) >> ((bitsNumPerEle - 1) - bitIndex);
+					if (r >= b)
+					{
+						r -= b;
+						q.b[getElementLength() - 1] |= 0x01;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	template<size_t SIZE>
+	inline bool BigInt<SIZE>::div(const BigInt& a, const BigInt& b, BigInt& q, BigInt& r) noexcept
+	{
+		q = BigInt<SIZE>();
+		r = BigInt<SIZE>();
+		if (b <= 1)
+		{
+			if (b.b[getElementLength() - 1] == 0)
+			{
+				return false;
+			}
+			else
+			{
+				q = a;
+			}
+		}
+		else
+		{
+			auto cmp = a <=> b;
+			if (cmp < 0)
+			{
+				r = a;
+			}
+			else if (cmp == 0)
+			{
+				q.b[getElementLength() - 1] = 0x01;
+			}
+			else
+			{
+				const size_t bitsNumPerEle = 8 * sizeof(uint32_t);
+				r.b[getElementLength() - 1] |= a.b[0] >> (bitsNumPerEle - 1);
+				if (r >= b)
+				{
+					r -= b;
+					q.b[getElementLength() - 1] = 0x01;
+				}
+				for (size_t i = 1; i < SIZE; i++)
+				{
+					size_t bIndex = i / bitsNumPerEle;
+					size_t bitIndex = i % bitsNumPerEle;
+					uint32_t mask = static_cast<uint32_t>(1) << ((bitsNumPerEle - 1) - bitIndex);
+					r <<= 1;
+					q <<= 1;
+					r.b[getElementLength() - 1] |= (a.b[bIndex] & mask) >> ((bitsNumPerEle - 1) - bitIndex);
+					if (r >= b)
+					{
+						r -= b;
+						q.b[getElementLength() - 1] |= 0x01;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	template<size_t SIZE>
+	inline std::strong_ordering BigInt<SIZE>::operator<=>(const uint32_t& other) const noexcept
 	{
 		for (int i = 0; i < getElementLength() - 1; i++)
 		{
 			if (b[i] != 0)
 			{
-				return std::weak_ordering::greater;
+				return std::strong_ordering::greater;
 			}
 		}
 		if (b[getElementLength() - 1] != other)
 		{
 			if (b[getElementLength() - 1] > other)
 			{
-				return std::weak_ordering::greater;
+				return std::strong_ordering::greater;
 			}
 			else
 			{
-				return std::weak_ordering::less;
+				return std::strong_ordering::less;
 			}
 		}
-		return std::weak_ordering::equivalent;
+		return std::strong_ordering::equivalent;
 	}
 	template<size_t SIZE>
-	inline std::weak_ordering BigInt<SIZE>::operator<=>(const BigInt<SIZE>& other) const
+	inline std::strong_ordering BigInt<SIZE>::operator<=>(const BigInt<SIZE>& other) const noexcept
 	{
 		for (size_t i = 0; i < getElementLength(); i++)
 		{
@@ -163,15 +275,15 @@ namespace bigint {
 			{
 				if (b[i] > other.b[i])
 				{
-					return std::weak_ordering::greater;
+					return std::strong_ordering::greater;
 				}
 				else
 				{
-					return std::weak_ordering::less;
+					return std::strong_ordering::less;
 				}
 			}
 		}
-		return std::weak_ordering::equivalent;
+		return std::strong_ordering::equivalent;
 	}
 	template<size_t SIZE>
 	inline BigInt<SIZE> BigInt<SIZE>::operator>>(const uint16_t& shiftnum) const
@@ -410,56 +522,59 @@ namespace bigint {
 		return *this;
 	}
 	template<size_t SIZE>
+	inline BigInt<SIZE> BigInt<SIZE>::operator/(const uint32_t& other) const
+	{
+		BigInt<SIZE> quotient;
+		BigInt<SIZE> remainder;
+		div(*this, other, quotient, remainder);
+		return quotient;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE>& BigInt<SIZE>::operator/=(const uint32_t& other)
+	{
+		*this = *this / other;
+		return *this;
+	}
+	template<size_t SIZE>
 	inline BigInt<SIZE> BigInt<SIZE>::operator/(const BigInt<SIZE>& other) const
 	{
-		if (other > *this)
-		{
-			return BigInt<SIZE>();
-		}
-		else if (other == *this)
-		{
-			return BigInt<SIZE>(1);
-		}
-		else
-		{
-			BigInt<SIZE> quotient(*this);
-			BigInt<SIZE> remainder(*this);
-			int validBitsNum = SIZE;
-			for (int i = 0; i < getElementLength(); i++)
-			{
-				if (other.b[i] == 0)
-				{
-					validBitsNum -= sizeof(uint32_t) * 8;
-				}
-				else
-				{
-					validBitsNum -= (sizeof(uint32_t) * 8 - utility::getValidBits(other.b[i]));
-					break;
-				}
-			}
-			quotient >>= validBitsNum - 1;
-			if (quotient > 4)
-			{
-				quotient -= 2;
-				remainder -= (other * quotient);
-			}
-			else
-			{
-				quotient.b[getElementLength() - 1] = 0;
-			}
-			while (remainder >= other)
-			{
-				quotient += 1;
-				remainder -= other;
-			}
-			return quotient;
-		}
+		BigInt<SIZE> quotient;
+		BigInt<SIZE> remainder;
+		div(*this, other, quotient, remainder);
+		return quotient;
 	}
 	template<size_t SIZE>
 	inline BigInt<SIZE>& BigInt<SIZE>::operator/=(const BigInt<SIZE>& other)
 	{
-		BigInt<SIZE> tmp = *this / other;
-		std::memcpy(b, tmp.b, getElementLength());
+		*this = *this / other;
+		return *this;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE> BigInt<SIZE>::operator%(const uint32_t& other) const
+	{
+		BigInt<SIZE> quotient;
+		BigInt<SIZE> remainder;
+		div(*this, other, quotient, remainder);
+		return remainder;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE>& BigInt<SIZE>::operator%=(const uint32_t& other)
+	{
+		*this = *this % other;
+		return *this;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE> BigInt<SIZE>::operator%(const BigInt<SIZE>& other) const
+	{
+		BigInt<SIZE> quotient;
+		BigInt<SIZE> remainder;
+		div(*this, other, quotient, remainder);
+		return remainder;
+	}
+	template<size_t SIZE>
+	inline BigInt<SIZE>& BigInt<SIZE>::operator%=(const BigInt<SIZE>& other)
+	{
+		*this = *this % other;
 		return *this;
 	}
 }
