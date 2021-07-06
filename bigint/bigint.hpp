@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <algorithm>
+#include <compare>
 
 namespace bigint {
 	template <size_t SIZE>
@@ -170,33 +171,29 @@ namespace bigint {
 		else
 		{
 			auto cmp = a <=> b;
-			if (cmp == 0)
+			if (cmp < 0)
+			{
+				r = a;
+			}
+			else if (cmp == 0)
 			{
 				q.b[getElementCount() - 1] = 0x01;
 			}
 			else if (cmp > 0)
 			{
-				const size_t bitsNumPerEle = 8 * sizeof(uint32_t);
-				r.b[getElementCount() - 1] |= a.b[0] >> (bitsNumPerEle - 1);
-				if (r >= b)
+				uint64_t qq = a.b[0];
+				if (qq > b)
 				{
-					r -= b;
-					q.b[getElementCount() - 1] = 0x01;
+					q.b[0] = static_cast<uint32_t>(qq / b);
+					qq %= b;
 				}
-				for (size_t i = 1; i < SIZE; i++)
+				for (size_t i = 1; i < getElementCount(); i++)
 				{
-					size_t bIndex = i / bitsNumPerEle;
-					size_t bitIndex = i % bitsNumPerEle;
-					uint32_t mask = static_cast<uint32_t>(1) << ((bitsNumPerEle - 1) - bitIndex);
-					r <<= 1;
-					q <<= 1;
-					r.b[getElementCount() - 1] |= (a.b[bIndex] & mask) >> ((bitsNumPerEle - 1) - bitIndex);
-					if (r >= b)
-					{
-						r -= b;
-						q.b[getElementCount() - 1] |= 0x01;
-					}
+					qq = (qq << 32) | a.b[i];
+					q.b[i] = static_cast<uint32_t>(qq / b);
+					qq %= b;
 				}
+				r.b[getElementCount() - 1] |= static_cast<uint32_t>(qq);
 			}
 		}
 		return true;
