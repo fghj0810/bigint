@@ -124,7 +124,7 @@ namespace bigint {
 			bufIndex++;
 			uint32_t n4 = (bufIndex >= 0) ? static_cast<uint32_t>(buf[bufIndex]) << 0 : 0;
 			bufIndex++;
-			b[64 - num / 4 - 1] = n2 | n3 | n4;
+			b[getElementCount() - num / 4 - 1] = n2 | n3 | n4;
 		}
 		for (size_t i = getElementCount() - num / 4; i < getElementCount(); i++)
 		{
