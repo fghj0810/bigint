@@ -6,56 +6,58 @@
 #include <compare>
 
 namespace bigint {
-	template <size_t SIZE>
-	class BigInt final
+	template <size_t BITWIDTH>
+	class BigUInt final
 	{
 	public:
-		constexpr static size_t getElementCount() { return SIZE / 8 / sizeof(uint32_t); }
+		constexpr static size_t getSize() { return BITWIDTH / 8; }
+		constexpr static size_t getElementBitWidth() { return sizeof(uint32_t) * 8; }
+		constexpr static size_t getElementCount() { return getSize() / sizeof(uint32_t); }
 	public:
-		BigInt() = default;
-		~BigInt() = default;
-		BigInt(const BigInt&) = default;
-		BigInt(BigInt&&) = default;
-		BigInt& operator=(const BigInt& other) = default;
-		BigInt& operator=(BigInt&& other) = default;
-		template <size_t OSIZE> explicit BigInt(const BigInt<OSIZE>&);
+		BigUInt() = default;
+		~BigUInt() = default;
+		BigUInt(const BigUInt&) = default;
+		BigUInt(BigUInt&&) = default;
+		BigUInt& operator=(const BigUInt& other) = default;
+		BigUInt& operator=(BigUInt&& other) = default;
+		template <size_t OBITWIDTH> explicit BigUInt(const BigUInt<OBITWIDTH>&);
 
 	public:
-		BigInt(const uint32_t& value);
-		BigInt(uint8_t* buf, size_t num);
+		BigUInt(const uint32_t& value);
+		BigUInt(uint8_t* buf, size_t num);
 		void getBytes(uint8_t* buf) const;
-		static bool div(const BigInt& a, const uint32_t& b, BigInt& q, BigInt& r) noexcept;
-		static bool div(const BigInt& a, const BigInt& b, BigInt& q, BigInt& r) noexcept;
+		static bool div(const BigUInt& a, const uint32_t& b, BigUInt& q, BigUInt& r) noexcept;
+		static bool div(const BigUInt& a, const BigUInt& b, BigUInt& q, BigUInt& r) noexcept;
 
 	public:
 		std::strong_ordering operator<=>(const uint32_t& other) const noexcept;
-		std::strong_ordering operator<=>(const BigInt& other) const noexcept;
-		BigInt operator>>(const uint16_t& shiftnum) const;
-		BigInt& operator>>=(const uint16_t& shiftnum);
-		BigInt operator<<(const uint16_t& shiftnum) const;
-		BigInt& operator<<=(const uint16_t& shiftnum);
-		BigInt operator+(const uint32_t& other) const;
-		BigInt& operator+=(const uint32_t& other);
-		BigInt operator+(const BigInt& other) const;
-		BigInt& operator+=(const BigInt& other);
-		BigInt operator-(const uint32_t& other) const;
-		BigInt& operator-=(const uint32_t& other);
-		BigInt operator-(const BigInt& other) const;
-		BigInt& operator-=(const BigInt& other);
-		BigInt operator*(const uint32_t& other) const;
-		BigInt& operator*=(const uint32_t& other);
-		BigInt operator*(const BigInt& other) const;
-		BigInt& operator*=(const BigInt& other);
-		BigInt operator/(const uint32_t& other) const;
-		BigInt& operator/=(const uint32_t& other);
-		BigInt operator/(const BigInt& other) const;
-		BigInt& operator/=(const BigInt& other);
-		BigInt operator%(const uint32_t& other) const;
-		BigInt& operator%=(const uint32_t& other);
-		BigInt operator%(const BigInt& other) const;
-		BigInt& operator%=(const BigInt& other);
-		BigInt& operator++();
-		BigInt& operator--();
+		std::strong_ordering operator<=>(const BigUInt& other) const noexcept;
+		BigUInt operator>>(const uint16_t& shiftnum) const;
+		BigUInt& operator>>=(const uint16_t& shiftnum);
+		BigUInt operator<<(const uint16_t& shiftnum) const;
+		BigUInt& operator<<=(const uint16_t& shiftnum);
+		BigUInt operator+(const uint32_t& other) const;
+		BigUInt& operator+=(const uint32_t& other);
+		BigUInt operator+(const BigUInt& other) const;
+		BigUInt& operator+=(const BigUInt& other);
+		BigUInt operator-(const uint32_t& other) const;
+		BigUInt& operator-=(const uint32_t& other);
+		BigUInt operator-(const BigUInt& other) const;
+		BigUInt& operator-=(const BigUInt& other);
+		BigUInt operator*(const uint32_t& other) const;
+		BigUInt& operator*=(const uint32_t& other);
+		BigUInt operator*(const BigUInt& other) const;
+		BigUInt& operator*=(const BigUInt& other);
+		BigUInt operator/(const uint32_t& other) const;
+		BigUInt& operator/=(const uint32_t& other);
+		BigUInt operator/(const BigUInt& other) const;
+		BigUInt& operator/=(const BigUInt& other);
+		BigUInt operator%(const uint32_t& other) const;
+		BigUInt& operator%=(const uint32_t& other);
+		BigUInt operator%(const BigUInt& other) const;
+		BigUInt& operator%=(const BigUInt& other);
+		BigUInt& operator++();
+		BigUInt& operator--();
 
 	private:
 		uint32_t b[getElementCount()] = { 0 };
@@ -96,24 +98,24 @@ namespace bigint {
 			return ret;
 		}
 	}
-	template<size_t SIZE>template<size_t OSIZE>
-	inline BigInt<SIZE>::BigInt(const BigInt<OSIZE>& value)
+	template<size_t BITWIDTH>template<size_t OBITWIDTH>
+	inline BigUInt<BITWIDTH>::BigUInt(const BigUInt<OBITWIDTH>& value)
 	{
 		size_t al = getElementCount();
-		size_t vl = BigInt<OSIZE>::getElementCount();
+		size_t vl = BigUInt<OBITWIDTH>::getElementCount();
 		size_t l = std::min(al, vl);
 		uint32_t* srcP = (uint32_t*)(&value);
-		std::memcpy(b + al - l, srcP + vl - l, l * 4);
+		std::memcpy(b + al - l, srcP + vl - l, l * sizeof(uint32_t));
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>::BigInt(const uint32_t& value)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>::BigUInt(const uint32_t& value)
 	{
 		b[getElementCount() - 1] = value;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>::BigInt(uint8_t* buf, size_t num)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>::BigUInt(uint8_t* buf, size_t num)
 	{
-		num = std::min(num, 8 * getElementCount());
+		num = std::min(num, getSize());
 		int bufIndex = 0;
 		if ((num & 0x03) != 0)
 		{
@@ -136,8 +138,8 @@ namespace bigint {
 			bufIndex += 4;
 		}
 	}
-	template<size_t SIZE>
-	inline void BigInt<SIZE>::getBytes(uint8_t* buf) const
+	template<size_t BITWIDTH>
+	inline void BigUInt<BITWIDTH>::getBytes(uint8_t* buf) const
 	{
 		int bufIndex = 0;
 		for (int i = 0; i < getElementCount(); i++)
@@ -152,11 +154,11 @@ namespace bigint {
 			bufIndex++;
 		}
 	}
-	template<size_t SIZE>
-	inline bool BigInt<SIZE>::div(const BigInt& a, const uint32_t& b, BigInt& q, BigInt& r) noexcept
+	template<size_t BITWIDTH>
+	inline bool BigUInt<BITWIDTH>::div(const BigUInt& a, const uint32_t& b, BigUInt& q, BigUInt& r) noexcept
 	{
-		q = BigInt<SIZE>();
-		r = BigInt<SIZE>();
+		q = BigUInt<BITWIDTH>();
+		r = BigUInt<BITWIDTH>();
 		if (b <= 1)
 		{
 			if (b == 0)
@@ -198,11 +200,11 @@ namespace bigint {
 		}
 		return true;
 	}
-	template<size_t SIZE>
-	inline bool BigInt<SIZE>::div(const BigInt& a, const BigInt& b, BigInt& q, BigInt& r) noexcept
+	template<size_t BITWIDTH>
+	inline bool BigUInt<BITWIDTH>::div(const BigUInt& a, const BigUInt& b, BigUInt& q, BigUInt& r) noexcept
 	{
-		q = BigInt<SIZE>();
-		r = BigInt<SIZE>();
+		q = BigUInt<BITWIDTH>();
+		r = BigUInt<BITWIDTH>();
 		if (b <= 1)
 		{
 			if (b.b[getElementCount() - 1] == 0)
@@ -227,14 +229,14 @@ namespace bigint {
 			}
 			else
 			{
-				const size_t bitsNumPerEle = 8 * sizeof(uint32_t);
+				const size_t bitsNumPerEle = getElementBitWidth();
 				r.b[getElementCount() - 1] |= a.b[0] >> (bitsNumPerEle - 1);
 				if (r >= b)
 				{
 					r -= b;
 					q.b[getElementCount() - 1] = 0x01;
 				}
-				for (size_t i = 1; i < SIZE; i++)
+				for (size_t i = 1; i < BITWIDTH; i++)
 				{
 					size_t bIndex = i / bitsNumPerEle;
 					size_t bitIndex = i % bitsNumPerEle;
@@ -252,8 +254,8 @@ namespace bigint {
 		}
 		return true;
 	}
-	template<size_t SIZE>
-	inline std::strong_ordering BigInt<SIZE>::operator<=>(const uint32_t& other) const noexcept
+	template<size_t BITWIDTH>
+	inline std::strong_ordering BigUInt<BITWIDTH>::operator<=>(const uint32_t& other) const noexcept
 	{
 		for (int i = 0; i < getElementCount() - 1; i++)
 		{
@@ -275,8 +277,8 @@ namespace bigint {
 		}
 		return std::strong_ordering::equivalent;
 	}
-	template<size_t SIZE>
-	inline std::strong_ordering BigInt<SIZE>::operator<=>(const BigInt<SIZE>& other) const noexcept
+	template<size_t BITWIDTH>
+	inline std::strong_ordering BigUInt<BITWIDTH>::operator<=>(const BigUInt<BITWIDTH>& other) const noexcept
 	{
 		for (size_t i = 0; i < getElementCount(); i++)
 		{
@@ -294,26 +296,26 @@ namespace bigint {
 		}
 		return std::strong_ordering::equivalent;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator>>(const uint16_t& shiftnum) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator>>(const uint16_t& shiftnum) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue >>= shiftnum;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator>>=(const uint16_t& shiftnum)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator>>=(const uint16_t& shiftnum)
 	{
 		if (shiftnum != 0)
 		{
-			if (shiftnum >= SIZE)
+			if (shiftnum >= BITWIDTH)
 			{
-				std::memset(b, 0, getElementCount() * sizeof(uint32_t));
+				std::memset(b, 0, getSize());
 			}
 			else
 			{
-				size_t shiftInt = shiftnum / (8 * sizeof(uint32_t));
-				size_t shiftIntBit = shiftnum % (8 * sizeof(uint32_t));
+				size_t shiftInt = shiftnum / getElementBitWidth();
+				size_t shiftIntBit = shiftnum % getElementBitWidth();
 				if (shiftIntBit == 0)
 				{
 					for (size_t i = getElementCount() - 1; i >= shiftInt; i--)
@@ -338,26 +340,26 @@ namespace bigint {
 		}
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator<<(const uint16_t& shiftnum) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator<<(const uint16_t& shiftnum) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue <<= shiftnum;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator<<=(const uint16_t& shiftnum)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator<<=(const uint16_t& shiftnum)
 	{
 		if (shiftnum != 0)
 		{
-			if (shiftnum >= SIZE)
+			if (shiftnum >= BITWIDTH)
 			{
-				std::memset(b, 0, getElementCount() * sizeof(uint32_t));
+				std::memset(b, 0, getSize());
 			}
 			else
 			{
-				size_t shiftInt = shiftnum / (8 * sizeof(uint32_t));
-				size_t shiftIntBit = shiftnum % (8 * sizeof(uint32_t));
+				size_t shiftInt = shiftnum / getElementBitWidth();
+				size_t shiftIntBit = shiftnum % getElementBitWidth();
 				if (shiftIntBit == 0)
 				{
 					for (size_t i = 0; i < getElementCount() - shiftInt; i++)
@@ -382,15 +384,15 @@ namespace bigint {
 		}
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator+(const uint32_t& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator+(const uint32_t& other) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue += other;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator+=(const uint32_t& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator+=(const uint32_t& other)
 	{
 		if (other != 0)
 		{
@@ -405,15 +407,15 @@ namespace bigint {
 		}
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator+(const BigInt<SIZE>& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator+(const BigUInt<BITWIDTH>& other) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue += other;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator+=(const BigInt<SIZE>& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator+=(const BigUInt<BITWIDTH>& other)
 	{
 		uint32_t overflow = 0;
 		for (size_t i = getElementCount() - 1; i > 0; i--)
@@ -425,15 +427,15 @@ namespace bigint {
 		b[0] += other.b[0] + overflow;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator-(const uint32_t& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator-(const uint32_t& other) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue -= other;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator-=(const uint32_t& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator-=(const uint32_t& other)
 	{
 		if (other != 0)
 		{
@@ -453,15 +455,15 @@ namespace bigint {
 		}
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator-(const BigInt<SIZE>& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator-(const BigUInt<BITWIDTH>& other) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue -= other;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator-=(const BigInt<SIZE>& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator-=(const BigUInt<BITWIDTH>& other)
 	{
 		uint32_t overflow = 1;
 		for (size_t i = getElementCount() - 1; i > 0; i--)
@@ -473,19 +475,19 @@ namespace bigint {
 		b[0] += (~other.b[0]) + overflow;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator*(const uint32_t& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator*(const uint32_t& other) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		retValue *= other;
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator*=(const uint32_t& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator*=(const uint32_t& other)
 	{
 		if (other == 0)
 		{
-			std::memset(b, 0, getElementCount() * sizeof(uint32_t));
+			std::memset(b, 0, getSize());
 		}
 		else if (other > 1)
 		{
@@ -500,10 +502,10 @@ namespace bigint {
 		}
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator*(const BigInt<SIZE>& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator*(const BigUInt<BITWIDTH>& other) const
 	{
-		BigInt<SIZE> retValue(*this);
+		BigUInt<BITWIDTH> retValue(*this);
 		uint64_t overflow = 0;
 		for (size_t i = getElementCount() - 1; i > 0; i--)
 		{
@@ -523,77 +525,77 @@ namespace bigint {
 		}
 		return retValue;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator*=(const BigInt<SIZE>& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator*=(const BigUInt<BITWIDTH>& other)
 	{
-		BigInt<SIZE> tmp = *this * other;
+		BigUInt<BITWIDTH> tmp = *this * other;
 		std::memcpy(b, tmp.b, getElementCount());
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator/(const uint32_t& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator/(const uint32_t& other) const
 	{
-		BigInt<SIZE> quotient;
-		BigInt<SIZE> remainder;
+		BigUInt<BITWIDTH> quotient;
+		BigUInt<BITWIDTH> remainder;
 		div(*this, other, quotient, remainder);
 		return quotient;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator/=(const uint32_t& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator/=(const uint32_t& other)
 	{
 		*this = *this / other;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator/(const BigInt<SIZE>& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator/(const BigUInt<BITWIDTH>& other) const
 	{
-		BigInt<SIZE> quotient;
-		BigInt<SIZE> remainder;
+		BigUInt<BITWIDTH> quotient;
+		BigUInt<BITWIDTH> remainder;
 		div(*this, other, quotient, remainder);
 		return quotient;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator/=(const BigInt<SIZE>& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator/=(const BigUInt<BITWIDTH>& other)
 	{
 		*this = *this / other;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator%(const uint32_t& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator%(const uint32_t& other) const
 	{
-		BigInt<SIZE> quotient;
-		BigInt<SIZE> remainder;
+		BigUInt<BITWIDTH> quotient;
+		BigUInt<BITWIDTH> remainder;
 		div(*this, other, quotient, remainder);
 		return remainder;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator%=(const uint32_t& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator%=(const uint32_t& other)
 	{
 		*this = *this % other;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE> BigInt<SIZE>::operator%(const BigInt<SIZE>& other) const
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH> BigUInt<BITWIDTH>::operator%(const BigUInt<BITWIDTH>& other) const
 	{
-		BigInt<SIZE> quotient;
-		BigInt<SIZE> remainder;
+		BigUInt<BITWIDTH> quotient;
+		BigUInt<BITWIDTH> remainder;
 		div(*this, other, quotient, remainder);
 		return remainder;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator%=(const BigInt<SIZE>& other)
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator%=(const BigUInt<BITWIDTH>& other)
 	{
 		*this = *this % other;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator++()
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator++()
 	{
 		*this += 1;
 		return *this;
 	}
-	template<size_t SIZE>
-	inline BigInt<SIZE>& BigInt<SIZE>::operator--()
+	template<size_t BITWIDTH>
+	inline BigUInt<BITWIDTH>& BigUInt<BITWIDTH>::operator--()
 	{
 		*this -= 1;
 		return *this;
